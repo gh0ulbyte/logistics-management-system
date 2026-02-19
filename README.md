@@ -1,46 +1,94 @@
-Fullstack logistics management platform designed to support product distribution workflows.
+# KAEL – Sistema de logística
 
-The system allows:
+Sistema de logística para distribución: carga de stock por factura (dueño), pedidos por vendedores, repartos por camioneta. Responsive (PC + móvil).
 
-Stock intake through supplier invoices
+## Requisitos
 
-Order creation by sales representatives
+- **.NET 8 SDK** (para el backend)
+- **Node.js 18+** (solo para el frontend)
+- npm o yarn
 
-Delivery assignment to vehicles
+## Instalación y ejecución
 
-Real-time stock updates
+### 1. Backend (API .NET)
 
-Role-based access control (Owner / Sales Representative)
+```bash
+cd Kael.Api
+dotnet restore
+dotnet run
+```
 
-Tech Stack
+- API en **http://localhost:3001**
+- La base de datos SQLite se crea automáticamente en `database/kael.db` la primera vez.
+- Usuario dueño por defecto: **admin@kael.com** / **admin123**
 
-ASP.NET Core (.NET 8) REST API
+### 2. Frontend
 
-React + Vite frontend
+En otra terminal:
 
-SQLite database
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-JWT authentication
+- App en **http://localhost:5173**
+- El proxy de Vite envía las peticiones `/api` al backend en el puerto 3001.
 
-BCrypt password hashing
+## Roles
 
-What this project demonstrates
+- **Dueño (owner):** Login con admin@kael.com. Acceso a: Inicio, Repartos, Productos (costo + ganancia), Cargar factura, Usuarios. Ve qué lleva cada camioneta.
+- **Vendedor:** Creado por el dueño en Usuarios. Acceso a: Clientes, Productos (solo stock y precio venta), Nuevo pedido, Mis pedidos. No ve costos ni ganancia.
 
-Role-based authorization
+## Flujo resumido
 
-Inventory management logic
+1. Dueño carga factura de compra (Cargar factura) → se actualiza stock y precios (costo + % ganancia).
+2. Dueño crea repartos (camionetas) en Repartos.
+3. Vendedor ve clientes, productos y toma pedidos (Nuevo pedido); puede asignar a un reparto.
+4. Al confirmar pedido se descuenta stock.
+5. Dueño ve en Repartos → Ver carga qué lleva cada camioneta.
 
-Order lifecycle handling
+## Estructura del proyecto
 
-Delivery assignment system
+```
+APP/
+  Kael.sln
+  Kael.Api/              # API ASP.NET Core 8 + SQLite
+    Controllers/         # Auth, Products, Clients, Repartos, Pedidos, Facturas
+    Entities/
+    Data/                # KaelDbContext
+    Services/            # AuthService (JWT, BCrypt)
+  frontend/              # React + Vite
+    src/
+      pages/owner/
+      pages/vendedor/
+      api.js
+  database/
+    kael.db              # Creado automáticamente por el backend .NET
+  backend/               # (opcional) API Node.js anterior
+  ESPECIFICACION.md
+```
 
-REST API architecture
+## API (resumen)
 
-Secure authentication flow
+- `POST /api/auth/login` – Login (email, password)
+- `GET /api/auth/me` – Usuario actual (Bearer token)
+- `GET/POST /api/products` – Productos (dueño ve costo; vendedor solo stock y precio_venta)
+- `GET/POST /api/clients` – Clientes
+- `GET/POST /api/repartos`, `GET /api/repartos/:id` – Repartos y detalle (qué lleva)
+- `GET/POST /api/pedidos`, `PATCH /api/pedidos/:id/reparto` – Pedidos
+- `POST /api/facturas` – Cargar factura de compra (dueño; actualiza stock y precios)
+- `GET/POST /api/auth/users` – Usuarios (solo dueño)
 
-Responsive UI (desktop + mobile)
+## Backend anterior (Node.js)
 
-This project simulates a real-world business logistics environment and showcases backend architecture, API design, and fullstack integration.
+Si preferís usar el backend en Node en lugar de .NET:
 
+```bash
+cd backend
+npm install
+npm run init-db
+npm run dev
+```
 
-All sensitive data, production credentials, and internal business references have been removed for security purposes.
+El frontend es el mismo; solo asegurate de que el backend que corras esté en el puerto 3001.

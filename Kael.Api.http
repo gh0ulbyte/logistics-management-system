@@ -1,0 +1,6 @@
+@Kael.Api_HostAddress = http://localhost:5069
+
+GET {{Kael.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
